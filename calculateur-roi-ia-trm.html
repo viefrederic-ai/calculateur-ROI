@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculateur ROI IA — Transport & Logistique</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #14304d;
+      --bg-panel: #1a3a5c;
+      --surface: rgba(255,255,255,0.04);
+      --surface-2: rgba(255,255,255,0.06);
+      --surface-hover: rgba(255,255,255,0.09);
+      --border: rgba(255,255,255,0.1);
+      --border-subtle: rgba(255,255,255,0.06);
+      --text-primary: #ffffff;
+      --text-secondary: #b8c5d3;
+      --text-muted: #6a7b8e;
+      --accent: #ea6627;
+      --accent-hover: #ff7a3d;
+      --accent-dim: rgba(234,102,39,0.14);
+      --blue: #38bdf8;
+      --blue-dim: rgba(56,189,248,0.12);
+      --blue-border: rgba(56,189,248,0.35);
+      --orange: #ea6627;
+      --orange-dim: rgba(234,102,39,0.14);
+      --orange-border: rgba(234,102,39,0.35);
+      --red: #ef4444;
+    }
+
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding-bottom: 60px;
+      font-feature-settings: "cv01","ss03";
+    }
+
+    header {
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 18px 32px;
+      display: flex; align-items: center; gap: 12px;
+      position: sticky; top: 0;
+      background: rgba(20,48,77,0.85);
+      backdrop-filter: blur(16px);
+      z-index: 50;
+    }
+    .logo-mark {
+      width: 28px; height: 28px; background: var(--accent);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: #fff;
+    }
+    .logo-text { font-size: 14px; font-weight: 500; letter-spacing: -0.2px; }
+    .logo-sep  { color: var(--text-muted); margin: 0 6px; }
+    .badge-header {
+      margin-left: auto;
+      background: var(--accent-dim);
+      border: 1px solid rgba(234,102,39,0.3);
+      color: var(--accent-hover);
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px; font-weight: 500;
+    }
+
+    .shell { max-width: 820px; margin: 0 auto; padding: 40px 24px 0; }
+
+    /* Stepper */
+    .stepper {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 40px; justify-content: center; flex-wrap: wrap;
+    }
+    .step-dot { display: flex; align-items: center; gap: 10px; }
+    .step-num {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600;
+      color: var(--text-muted); background: var(--bg);
+      transition: all 0.25s;
+    }
+    .step-label { font-size: 12px; color: var(--text-muted); font-weight: 500; letter-spacing: -0.1px; }
+    .step-dot.active .step-num {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(234,102,39,0.18);
+    }
+    .step-dot.active .step-label { color: var(--text-primary); }
+    .step-dot.done .step-num { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .step-dot.done .step-label { color: var(--text-secondary); }
+    .step-line { width: 32px; height: 1px; background: var(--border); }
+    .step-line.done { background: var(--accent); }
+    @media (max-width: 640px) { .step-label { display: none; } .step-line { width: 16px; } }
+
+    /* Panels */
+    .panel { display: none; animation: fadeIn 0.3s ease-out; }
+    .panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .panel-eyebrow {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--accent-hover);
+      margin-bottom: 14px; text-align: center;
+    }
+    .panel-title {
+      font-size: clamp(1.75rem, 4vw, 2.25rem); font-weight: 700;
+      line-height: 1.1; letter-spacing: -1.4px; text-align: center; margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    .panel-title em { font-style: normal; color: var(--accent); }
+    .panel-sub {
+      font-size: 15px; color: var(--text-secondary);
+      text-align: center; line-height: 1.6;
+      max-width: 560px; margin: 0 auto 40px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px; margin-bottom: 16px;
+    }
+
+    /* Step 1 */
+    .sector-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
+    .sector-opt {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 18px 14px; cursor: pointer; text-align: center; transition: all 0.15s;
+    }
+    .sector-opt:hover { background: var(--surface-hover); border-color: rgba(255,255,255,0.14); }
+    .sector-opt.selected {
+      border-color: var(--accent); background: var(--accent-dim);
+      box-shadow: 0 0 0 3px rgba(234,102,39,0.15);
+    }
+    .sector-icon { font-size: 22px; margin-bottom: 6px; }
+    .sector-name { font-size: 13px; font-weight: 500; }
+    @media (max-width: 560px) { .sector-grid { grid-template-columns: 1fr 1fr; } }
+
+    .big-input-group { text-align: center; }
+    .big-input-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; font-weight: 500; }
+    .big-stepper {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 8px;
+    }
+    .big-stepper button {
+      width: 40px; height: 40px; border: none; border-radius: 8px;
+      background: transparent; color: var(--text-secondary);
+      font-size: 20px; cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .big-stepper button:hover { background: var(--surface-hover); color: #fff; }
+    .big-stepper input {
+      width: 88px; background: transparent; border: none; color: #fff;
+      font-size: 32px; font-weight: 600; font-family: inherit; text-align: center;
+      outline: none; font-variant-numeric: tabular-nums; letter-spacing: -1px;
+    }
+    .big-stepper input::-webkit-inner-spin-button,
+    .big-stepper input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .ca-field {
+      margin-top: 24px; text-align: center;
+    }
+    .ca-field label { font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-bottom: 10px; display: block; }
+    .ca-wrap { position: relative; display: inline-block; }
+    .ca-wrap input {
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+      color: #fff; font-size: 18px; font-weight: 600; font-family: inherit;
+      padding: 12px 44px 12px 20px; outline: none; font-variant-numeric: tabular-nums;
+      text-align: center; min-width: 220px; transition: border-color 0.15s;
+    }
+    .ca-wrap input:focus { border-color: var(--accent); }
+    .ca-wrap .unit { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 500; pointer-events: none; }
+
+    /* Step 2 Profiles */
+    .profile-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent); border-radius: 10px;
+      padding: 18px 20px; margin-bottom: 12px;
+      display: grid; grid-template-columns: 1fr auto auto auto; gap: 16px; align-items: center;
+    }
+    .profile-card.color-blue   { border-left-color: var(--blue); }
+    .profile-card.color-orange { border-left-color: var(--orange); }
+    .profile-card.color-purple { border-left-color: #c084fc; }
+    .profile-card.color-pink   { border-left-color: #ec4899; }
+    .profile-card.color-teal   { border-left-color: #2dd4bf; }
+
+    .profile-main { min-width: 0; }
+    .profile-name { font-size: 15px; font-weight: 500; margin-bottom: 2px; letter-spacing: -0.15px; }
+    .profile-name input {
+      background: transparent; border: none; color: inherit;
+      font-size: inherit; font-weight: inherit; font-family: inherit;
+      outline: none; width: 100%; padding: 2px 0;
+    }
+    .profile-name input:focus { border-bottom: 1px solid var(--accent); }
+    .profile-desc { font-size: 12px; color: var(--text-muted); }
+    .profile-field { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .profile-field label {
+      font-size: 10px; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.06em; font-weight: 500;
+    }
+    .mini-input {
+      width: 72px; background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 7px; color: #fff; font-size: 14px; font-weight: 500;
+      font-family: inherit; padding: 6px 8px; text-align: center; outline: none;
+      font-variant-numeric: tabular-nums; transition: border-color 0.15s;
+    }
+    .mini-input:focus { border-color: var(--accent); }
+
+    .remove-btn {
+      width: 30px; height: 30px; background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); border-radius: 7px; cursor: pointer; font-size: 14px;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .remove-btn:hover { color: var(--red); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); }
+
+    .add-profile-btn {
+      width: 100%; padding: 14px; background: transparent;
+      border: 1px dashed var(--border); border-radius: 10px;
+      color: var(--text-secondary); font-size: 13px; font-weight: 500;
+      font-family: inherit; cursor: pointer; transition: all 0.15s; margin-top: 4px;
+    }
+    .add-profile-btn:hover { border-color: var(--accent); color: var(--accent-hover); background: var(--accent-dim); }
+
+    @media (max-width: 640px) {
+      .profile-card { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .profile-main { grid-column: 1 / -1; }
+    }
+
+    /* Step 3 Tasks */
+    .profile-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent); border-radius: 12px;
+      padding: 22px 24px; margin-bottom: 16px;
+    }
+    .profile-block.color-blue   { border-left-color: var(--blue); }
+    .profile-block.color-orange { border-left-color: var(--orange); }
+    .profile-block.color-purple { border-left-color: #c084fc; }
+    .profile-block.color-pink   { border-left-color: #ec4899; }
+    .profile-block.color-teal   { border-left-color: #2dd4bf; }
+
+    .profile-block-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding-bottom: 14px; margin-bottom: 18px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .profile-block-title { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
+    .profile-block-meta { font-size: 12px; color: var(--text-muted); }
+
+    .task-row {
+      display: grid; grid-template-columns: 1fr auto; gap: 14px;
+      padding: 14px 0; align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .task-row:last-child { border-bottom: none; }
+
+    .task-info { display: flex; align-items: center; gap: 10px; }
+    .task-checkbox {
+      width: 16px; height: 16px; border-radius: 4px;
+      border: 1.5px solid var(--border); background: var(--surface-2);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.15s;
+    }
+    .task-checkbox.checked { background: var(--accent); border-color: var(--accent); }
+    .task-checkbox.checked::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 700; }
+    .task-name { font-size: 13.5px; font-weight: 400; letter-spacing: -0.1px; }
+    .task-auto-tag {
+      font-size: 10px; font-weight: 600; color: var(--accent);
+      background: var(--accent-dim); padding: 1px 6px; border-radius: 4px;
+      margin-left: 6px; letter-spacing: 0.02em;
+    }
+    .task-row.disabled .task-name { color: var(--text-muted); }
+    .task-row.disabled .task-auto-tag { opacity: 0.4; }
+
+    .task-slider-wrap { display: flex; align-items: center; gap: 14px; min-width: 280px; }
+    .task-slider {
+      -webkit-appearance: none; appearance: none; flex: 1; height: 3px;
+      background: transparent; cursor: pointer;
+    }
+    .task-slider::-webkit-slider-runnable-track { height: 3px; border-radius: 9999px; background: rgba(255,255,255,0.1); }
+    .task-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); border: 2px solid #fff; margin-top: -6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: grab; transition: transform 0.1s;
+    }
+    .task-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    .task-slider::-moz-range-track { height: 3px; border-radius: 9999px; background: rgba(255,255,255,0.1); }
+    .task-slider::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); border: 2px solid #fff; cursor: grab;
+    }
+
+    .task-value {
+      font-size: 14px; font-weight: 600; min-width: 58px; text-align: right;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.2px;
+    }
+    .task-value small { font-size: 11px; font-weight: 400; color: var(--text-muted); margin-left: 2px; }
+
+    .add-task-btn {
+      margin-top: 12px; width: 100%; padding: 10px;
+      background: transparent; border: 1px dashed var(--border-subtle);
+      border-radius: 8px; color: var(--text-muted); font-size: 12px;
+      font-family: inherit; cursor: pointer; transition: all 0.15s;
+    }
+    .add-task-btn:hover { color: var(--accent-hover); border-color: var(--accent); }
+
+    @media (max-width: 640px) {
+      .task-row { grid-template-columns: 1fr; }
+      .task-slider-wrap { min-width: 0; width: 100%; }
+    }
+
+    /* Step 4 Results */
+    .summary-hero {
+      background: linear-gradient(135deg, rgba(234,102,39,0.1) 0%, rgba(26,58,92,0.6) 100%);
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 28px; text-align: center; margin-bottom: 20px;
+      font-size: 16px; line-height: 1.65; color: var(--text-secondary);
+    }
+    .summary-hero strong { color: #fff; font-weight: 600; }
+    .summary-hero .hl-orange { color: var(--orange); font-weight: 600; }
+
+    .result-card {
+      border-radius: 14px; padding: 32px 28px;
+      text-align: center; margin-bottom: 16px;
+      position: relative; overflow: hidden;
+    }
+    .result-card.cost {
+      background: linear-gradient(180deg, rgba(234,102,39,0.12) 0%, rgba(234,102,39,0.03) 100%);
+      border: 1px solid var(--orange-border);
+    }
+    .result-card.gain {
+      background: linear-gradient(180deg, rgba(56,189,248,0.1) 0%, rgba(56,189,248,0.02) 100%);
+      border: 1px solid var(--blue-border);
+    }
+    .result-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 18px;
+    }
+    .cost .result-label { color: var(--orange); }
+    .gain .result-label { color: var(--blue); }
+
+    .result-value {
+      font-size: clamp(2.75rem, 8vw, 4.5rem); font-weight: 700;
+      line-height: 1; letter-spacing: -2.5px;
+      font-variant-numeric: tabular-nums; margin-bottom: 10px;
+    }
+    .cost .result-value { color: var(--orange); }
+    .gain .result-value { color: var(--blue); }
+
+    .result-sub { font-size: 14px; color: var(--text-secondary); line-height: 1.55; }
+    .result-sub strong { color: #fff; font-weight: 600; }
+    .result-foot {
+      font-size: 12px; color: var(--text-muted);
+      margin-top: 12px; padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .result-arrow { text-align: center; font-size: 20px; color: var(--text-muted); margin: -4px 0 12px; }
+
+    .mini-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;
+    }
+    .mini-stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 14px; text-align: center;
+    }
+    .mini-stat-val { font-size: 22px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+    .mini-stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
+    @media (max-width: 560px) { .mini-stats { grid-template-columns: 1fr; } }
+
+    .detail-toggle {
+      background: transparent; border: none; color: #fff;
+      font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer;
+      padding: 14px 0; display: flex; align-items: center; gap: 6px;
+    }
+    .detail-toggle:hover { color: var(--accent-hover); }
+    .detail-toggle.open .chev { transform: rotate(180deg); }
+    .chev { transition: transform 0.2s; }
+
+    .detail-table {
+      display: none; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; margin-bottom: 20px;
+    }
+    .detail-table.open { display: block; }
+    .detail-head {
+      display: grid; grid-template-columns: 1fr 70px 70px 90px; gap: 12px;
+      padding: 12px 16px; background: var(--surface-2);
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--text-muted);
+    }
+    .detail-row {
+      display: grid; grid-template-columns: 1fr 70px 70px 90px; gap: 12px;
+      padding: 11px 16px; font-size: 13px;
+      border-top: 1px solid var(--border-subtle); align-items: center;
+    }
+    .detail-row-task { color: var(--text-secondary); }
+    .detail-row-h, .detail-row-auto { text-align: right; font-variant-numeric: tabular-nums; color: #fff; }
+    .detail-row-auto { color: var(--accent); font-weight: 500; }
+    .detail-row-cost { color: var(--orange); font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+    .detail-section {
+      padding: 10px 16px; background: rgba(234,102,39,0.06);
+      font-size: 12px; font-weight: 600; color: var(--accent-hover);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .cta-final {
+      background: linear-gradient(135deg, rgba(234,102,39,0.15) 0%, rgba(26,58,92,0.5) 100%);
+      border: 1px solid rgba(234,102,39,0.3);
+      border-radius: 14px; padding: 32px 28px; text-align: center; margin-top: 24px;
+    }
+    .cta-title { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 10px; text-transform: uppercase; }
+    .cta-desc {
+      font-size: 14px; color: var(--text-secondary);
+      margin-bottom: 20px; line-height: 1.55;
+      max-width: 460px; margin-left: auto; margin-right: auto;
+    }
+    .cta-stat {
+      display: inline-block; font-size: 12px; color: #fff;
+      background: rgba(56,189,248,0.12); border: 1px solid var(--blue-border);
+      padding: 6px 14px; border-radius: 9999px; margin-top: 14px; font-weight: 500;
+    }
+    .cta-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    /* Actions */
+    .actions { display: flex; gap: 12px; margin-top: 36px; justify-content: space-between; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: 9px;
+      font-size: 14px; font-weight: 500; font-family: inherit;
+      cursor: pointer; border: 1px solid transparent;
+      transition: all 0.15s; letter-spacing: -0.1px; text-decoration: none;
+    }
+    .btn-ghost { background: var(--surface-2); color: #fff; border-color: var(--border); }
+    .btn-ghost:hover { background: var(--surface-hover); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover {
+      background: var(--accent-hover); transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(234,102,39,0.35);
+    }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-cta { background: var(--accent); color: #fff; padding: 13px 28px; font-size: 15px; font-weight: 600; }
+    .btn-cta:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(234,102,39,0.4); }
+    .btn-outline { background: transparent; border-color: rgba(255,255,255,0.2); color: #fff; padding: 13px 22px; }
+    .btn-outline:hover { background: var(--surface-hover); }
+    .btn.invisible { visibility: hidden; }
+
+    .validation-hint {
+      color: var(--red); font-size: 12px; text-align: center;
+      margin-top: 8px; min-height: 16px;
+    }
+
+    .note {
+      max-width: 680px; margin: 48px auto 0; padding: 0 24px;
+      font-size: 12px; color: var(--text-muted); line-height: 1.6; text-align: center;
+    }
+
+    /* Modal Lead Capture */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(10,24,40,0.82);
+      backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 100; padding: 20px;
+      animation: fadeIn 0.2s ease-out;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: 16px; padding: 36px 32px;
+      max-width: 440px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    .modal-eyebrow {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--accent); background: var(--accent-dim);
+      padding: 4px 10px; border-radius: 9999px; margin-bottom: 16px;
+    }
+    .modal h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.6px; margin-bottom: 10px; line-height: 1.2; text-transform: uppercase; }
+    .modal p { font-size: 14px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 22px; }
+    .form-row { margin-bottom: 14px; }
+    .form-row label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
+    .form-row input {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 8px; color: #fff; font-size: 14px;
+      font-family: inherit; padding: 10px 12px; outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-row input:focus { border-color: var(--accent); }
+    .form-row input.error { border-color: var(--red); }
+    .form-row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-error { color: var(--red); font-size: 11px; margin-top: 4px; min-height: 14px; }
+    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-consent {
+      font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-top: 6px;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .modal-consent input[type="checkbox"] { margin-top: 2px; accent-color: var(--accent); }
+
+    /* Print */
+    @media print {
+      body { background: #fff; color: #111; padding: 0; }
+      header, .stepper, .actions, .modal-backdrop, .add-profile-btn,
+      .add-task-btn, .btn, .detail-toggle { display: none !important; }
+      .panel { display: none !important; }
+      .panel[data-panel="4"] { display: block !important; }
+      .detail-table { display: block !important; }
+      .summary-hero, .result-card, .cta-final, .mini-stat {
+        background: #fff !important; color: #111 !important;
+        border: 1px solid #ddd !important; page-break-inside: avoid;
+      }
+      .cost .result-value { color: #ea6627 !important; }
+      .gain .result-value { color: #0284c7 !important; }
+      .summary-hero strong, .result-sub strong, .mini-stat-val { color: #111 !important; }
+      .note { color: #666; }
+      .shell { max-width: 100%; padding: 0 20px; }
+      .panel-title { color: #14304d; }
+      .panel-title em { color: #ea6627; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">F</div>
+  <span class="logo-text">Fred Vié <span class="logo-sep">·</span> Consultant IA</span>
+  <span class="badge-header">Transport & Logistique</span>
+</header>
+
+<div class="shell">
+
+  <div class="stepper" id="stepper">
+    <div class="step-dot active" data-step="1"><div class="step-num">1</div><div class="step-label">Entreprise</div></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="2"><div class="step-num">2</div><div class="step-label">Profils</div></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="3"><div class="step-num">3</div><div class="step-label">Tâches</div></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="4"><div class="step-num">4</div><div class="step-label">Résultats</div></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <section class="panel active" data-panel="1">
+    <div class="panel-eyebrow">Étape 1 sur 4</div>
+    <h1 class="panel-title">Parlons de <em>votre entreprise</em></h1>
+    <p class="panel-sub">Secteur, effectif total et CA — pour affiner l'estimation, notamment sur le coût caché des erreurs de saisie.</p>
+
+    <div class="card">
+      <div class="big-input-label">Secteur d'activité</div>
+      <div class="sector-grid" id="sector-grid">
+        <div class="sector-opt selected" data-sector="transport"><div class="sector-icon">🚛</div><div class="sector-name">Transport routier</div></div>
+        <div class="sector-opt" data-sector="logistique"><div class="sector-icon">📦</div><div class="sector-name">Logistique / Entrepôt</div></div>
+        <div class="sector-opt" data-sector="messagerie"><div class="sector-icon">✉️</div><div class="sector-name">Messagerie / Dernier km</div></div>
+        <div class="sector-opt" data-sector="affretement"><div class="sector-icon">🧭</div><div class="sector-name">Affrètement</div></div>
+        <div class="sector-opt" data-sector="froid"><div class="sector-icon">❄️</div><div class="sector-name">Transport frigorifique</div></div>
+        <div class="sector-opt" data-sector="autre"><div class="sector-icon">🏢</div><div class="sector-name">Autre</div></div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border-subtle);margin:24px 0;">
+
+      <div class="big-input-group">
+        <div class="big-input-label">Nombre total de salariés</div>
+        <div class="big-stepper">
+          <button type="button" onclick="adjustEmployees(-1)">−</button>
+          <input type="number" id="total-employees" min="1" max="500" value="8">
+          <button type="button" onclick="adjustEmployees(1)">+</button>
+        </div>
+      </div>
+
+      <div class="ca-field">
+        <label for="ca-input">Chiffre d'affaires annuel (optionnel)</label>
+        <div class="ca-wrap">
+          <input type="number" id="ca-input" min="0" step="100000" placeholder="2 000 000" value="2000000">
+          <span class="unit">€</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost invisible">Retour</button>
+      <button class="btn btn-primary" onclick="goToStep(2)">Continuer →</button>
+    </div>
+    <div class="validation-hint" id="hint-1"></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="panel" data-panel="2">
+    <div class="panel-eyebrow">Étape 2 sur 4</div>
+    <h1 class="panel-title">Les <em>profils</em> de votre équipe</h1>
+    <p class="panel-sub">Combien de personnes par profil et leur coût horaire chargé (salaire + charges + structure).</p>
+
+    <div id="profiles-list"></div>
+    <button class="add-profile-btn" onclick="addCustomProfile()">+ Ajouter un profil personnalisé</button>
+
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="goToStep(1)">← Retour</button>
+      <button class="btn btn-primary" onclick="goToStep(3)">Continuer →</button>
+    </div>
+    <div class="validation-hint" id="hint-2"></div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="panel" data-panel="3">
+    <div class="panel-eyebrow">Étape 3 sur 4</div>
+    <h1 class="panel-title">Estimez le <em>temps perdu</em> par semaine</h1>
+    <p class="panel-sub">Pour chaque profil, indiquez les heures <strong>par personne</strong> perdues chaque semaine sur ces tâches. L'étiquette orange indique le potentiel d'automatisation IA.</p>
+
+    <div id="tasks-container"></div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="goToStep(2)">← Retour</button>
+      <button class="btn btn-primary" onclick="goToStep(4)">Voir les résultats →</button>
+    </div>
+    <div class="validation-hint" id="hint-3"></div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="panel" data-panel="4">
+    <div class="panel-eyebrow">Résultats personnalisés</div>
+    <h1 class="panel-title">Voici votre <em>potentiel</em></h1>
+
+    <div class="summary-hero" id="summary-hero"></div>
+
+    <div class="result-card cost">
+      <div class="result-label">Coût annuel de vos tâches répétitives</div>
+      <div class="result-value" id="r-cost">— €</div>
+      <div class="result-sub" id="r-cost-sub">—</div>
+    </div>
+
+    <div class="result-arrow">↓</div>
+
+    <div class="result-card gain">
+      <div class="result-label">Économie estimée avec l'automatisation IA</div>
+      <div class="result-value" id="r-gain">— €</div>
+      <div class="result-sub" id="r-gain-sub">—</div>
+      <div class="result-foot" id="r-gain-foot">—</div>
+    </div>
+
+    <div class="mini-stats">
+      <div class="mini-stat"><div class="mini-stat-val" id="m-etp">—</div><div class="mini-stat-lbl">Salariés équivalents libérés</div></div>
+      <div class="mini-stat"><div class="mini-stat-val" id="m-days">—</div><div class="mini-stat-lbl">Jours récupérés</div></div>
+      <div class="mini-stat"><div class="mini-stat-val" id="m-errors">—</div><div class="mini-stat-lbl">Pertes litiges estimées</div></div>
+    </div>
+
+    <button class="detail-toggle" onclick="toggleDetail()">Voir le détail par tâche <span class="chev">▾</span></button>
+    <div class="detail-table" id="detail-table"></div>
+
+    <div class="cta-final">
+      <div class="cta-title">Réservez votre audit offert — 30 min</div>
+      <div class="cta-desc">On identifie ensemble vos leviers d'automatisation concrets — sans casser vos process et en sécurisant vos données.</div>
+      <div class="cta-buttons">
+        <a class="btn btn-cta" id="calendly-link" href="https://calendly.com/fred-vie/audit-ia" target="_blank" rel="noopener">📅 Prendre rendez-vous</a>
+        <button class="btn btn-outline" onclick="window.print()">📄 Exporter en PDF</button>
+      </div>
+      <div class="cta-stat" id="cta-stat">—</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="goToStep(3)">← Modifier</button>
+      <button class="btn btn-primary" onclick="resetAll()">Nouveau calcul</button>
+    </div>
+  </section>
+
+  <p class="note">
+    Estimations basées sur des moyennes observées chez nos clients TRM & logistique.
+    Les gains réels varient selon la maturité numérique, les process existants et les outils en place.
+    Outil développé par Fred Vié — Consultant IA & Automatisation.
+  </p>
+</div>
+
+<!-- LEAD CAPTURE MODAL -->
+<div class="modal-backdrop" id="lead-modal">
+  <div class="modal">
+    <span class="modal-eyebrow">Dernière étape</span>
+    <h2>Recevez vos résultats détaillés</h2>
+    <p>On vous envoie votre rapport PDF personnalisé et un créneau pour en discuter — gratuitement, sans engagement.</p>
+    <form id="lead-form" novalidate>
+      <div class="form-row-grid">
+        <div class="form-row">
+          <label>Prénom *</label>
+          <input type="text" name="firstname" required>
+        </div>
+        <div class="form-row">
+          <label>Nom *</label>
+          <input type="text" name="lastname" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Email professionnel *</label>
+        <input type="email" name="email" required>
+      </div>
+      <div class="form-row">
+        <label>Entreprise *</label>
+        <input type="text" name="company" required>
+      </div>
+      <div class="form-row">
+        <label>Téléphone (optionnel)</label>
+        <input type="tel" name="phone">
+      </div>
+      <div class="form-error" id="form-error"></div>
+      <label class="modal-consent">
+        <input type="checkbox" id="consent" required>
+        <span>J'accepte d'être recontacté par Fred Vié concernant mon audit. Vos données restent privées et ne sont pas revendues.</span>
+      </label>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeLeadModal()">Plus tard</button>
+        <button type="submit" class="btn btn-primary" style="flex:1">Voir mes résultats →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════════════════════ */
+const CALENDLY_URL = "https://calendly.com/fred-vie/audit-ia";
+const STORAGE_KEY  = "calc-roi-trm-v3";
+const SEMAINES = 46;
+
+/* Tâches avec taux d'automatisation réalistes */
+const PROFILE_TEMPLATES = {
+  dirigeant: {
+    name: "Dirigeant / Gérant", desc: "Pilotage & décisions stratégiques",
+    color: "orange", defaultCount: 1, defaultRate: 75,
+    tasks: [
+      { key: 'devis',      label: "Création de devis, chiffrages, factures",       def: 2, on: true,  auto: 0.75 },
+      { key: 'copier',     label: "Copier-coller et re-saisie entre logiciels",    def: 1, on: true,  auto: 0.95 },
+      { key: 'emails',     label: "Traitement et classement des emails",           def: 2, on: true,  auto: 0.65 },
+      { key: 'relances',   label: "Relances clients et fournisseurs",              def: 1, on: true,  auto: 0.85 },
+      { key: 'report',     label: "Reporting, tableaux de bord, suivi KPIs",       def: 2, on: true,  auto: 0.80 },
+      { key: 'rh',         label: "Gestion RH quotidienne (plannings, absences)",  def: 1, on: true,  auto: 0.55 },
+      { key: 'commercial', label: "Prospection & suivi commercial",                def: 2, on: false, auto: 0.60 },
+    ],
+  },
+  admin: {
+    name: "Assistant(e) administratif(ve)", desc: "Facturation, saisie, suivi documents",
+    color: "blue", defaultCount: 1, defaultRate: 32,
+    tasks: [
+      { key: 'saisie',    label: "Saisie commandes & bons de livraison",      def: 4, on: true,  auto: 0.90 },
+      { key: 'factu',     label: "Facturation clients & édition documents",   def: 3, on: true,  auto: 0.85 },
+      { key: 'banque',    label: "Rapprochement bancaire & pré-comptabilité", def: 2, on: true,  auto: 0.75 },
+      { key: 'classe',    label: "Classement, archivage, GED",                def: 3, on: true,  auto: 0.95 },
+      { key: 'email-adm', label: "Traitement emails entrants",                def: 3, on: true,  auto: 0.70 },
+      { key: 'impayes',   label: "Relances impayés & suivi paiements",        def: 2, on: true,  auto: 0.80 },
+      { key: 'litiges',   label: "Gestion des litiges & réclamations",        def: 2, on: true,  auto: 0.50 },
+      { key: 'frais',     label: "Gestion des notes de frais",                def: 1, on: false, auto: 0.85 },
+    ],
+  },
+  exploit: {
+    name: "Exploitation / Dispatch", desc: "Planification, affectation, suivi flotte",
+    color: "orange", defaultCount: 1, defaultRate: 42,
+    tasks: [
+      { key: 'planif',    label: "Planification des tournées & ordres de mission", def: 5, on: true,  auto: 0.65 },
+      { key: 'affect',    label: "Affectation chauffeurs & véhicules",              def: 3, on: true,  auto: 0.55 },
+      { key: 'suivi',     label: "Suivi livraisons en temps réel",                  def: 4, on: true,  auto: 0.75 },
+      { key: 'comch',     label: "Communication avec les chauffeurs (tél, SMS)",   def: 3, on: true,  auto: 0.60 },
+      { key: 'incidents', label: "Gestion des retards & incidents",                 def: 2, on: true,  auto: 0.40 },
+      { key: 'cmr',       label: "Préparation CMR, lettres de voiture, documents",  def: 3, on: true,  auto: 0.90 },
+      { key: 'sous',      label: "Gestion des sous-traitants & affrètement",        def: 2, on: true,  auto: 0.55 },
+      { key: 'reporting', label: "Reporting exploitation & rentabilité tournées",   def: 2, on: false, auto: 0.85 },
+    ],
+  },
+  chauffeur: {
+    name: "Chauffeur / Transporteur", desc: "Saisie terrain, comptes-rendus, CMR",
+    color: "purple", defaultCount: 5, defaultRate: 28,
+    tasks: [
+      { key: 'cmr-ch',      label: "Saisie / scan des CMR et bons de livraison", def: 2, on: true,  auto: 0.90 },
+      { key: 'rapports',    label: "Rapports d'activité quotidiens",             def: 1, on: true,  auto: 0.85 },
+      { key: 'pointage',    label: "Pointage & gestion des temps de conduite",   def: 1, on: true,  auto: 0.70 },
+      { key: 'photos',      label: "Photos de livraison, preuves, signatures",   def: 1, on: true,  auto: 0.80 },
+      { key: 'frais-ch',    label: "Notes de frais (carburant, péages, repas)",  def: 0.5, on: true, auto: 0.90 },
+      { key: 'incidents-ch', label: "Déclaration d'incidents / sinistres",        def: 0.5, on: false, auto: 0.50 },
+    ],
+  },
+  commercial: {
+    name: "Commercial", desc: "Prospection, devis, relances",
+    color: "pink", defaultCount: 1, defaultRate: 40,
+    tasks: [
+      { key: 'prospec',      label: "Prospection & qualification de leads",  def: 4, on: true, auto: 0.70 },
+      { key: 'devis-com',    label: "Rédaction devis & tarifs",              def: 3, on: true, auto: 0.80 },
+      { key: 'relances-com', label: "Relances commerciales & suivi",         def: 3, on: true, auto: 0.85 },
+      { key: 'crm',          label: "Mise à jour CRM & reporting",            def: 2, on: true, auto: 0.90 },
+      { key: 'rdv',          label: "Préparation RDV & comptes-rendus",       def: 2, on: true, auto: 0.65 },
+    ],
+  },
+  qhse: {
+    name: "QHSE / Réglementaire", desc: "Conformité, sécurité, audits",
+    color: "teal", defaultCount: 1, defaultRate: 45,
+    tasks: [
+      { key: 'conform',   label: "Suivi conformité réglementaire (ADR, TPMR...)", def: 3, on: true, auto: 0.70 },
+      { key: 'audits',    label: "Préparation audits & certifications",           def: 2, on: true, auto: 0.60 },
+      { key: 'formation', label: "Suivi formations & habilitations",               def: 2, on: true, auto: 0.80 },
+      { key: 'accidents', label: "Gestion accidents & sinistres",                  def: 1, on: true, auto: 0.45 },
+    ],
+  },
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   STATE + PERSISTENCE
+══════════════════════════════════════════════════════════════════ */
+let state = loadState() || defaultState();
+
+function defaultState() {
+  return {
+    step: 1,
+    sector: 'transport',
+    totalEmployees: 8,
+    ca: 2000000,
+    leadCaptured: false,
+    lead: null,
+    profiles: [
+      initProfile('dirigeant'),
+      initProfile('admin'),
+      initProfile('exploit'),
+      initProfile('chauffeur'),
+    ],
+  };
+}
+
+function initProfile(key) {
+  const tpl = PROFILE_TEMPLATES[key];
+  return {
+    id: key + '-' + Math.random().toString(36).slice(2,7),
+    templateKey: key, name: tpl.name, desc: tpl.desc, color: tpl.color,
+    count: tpl.defaultCount, rate: tpl.defaultRate,
+    tasks: tpl.tasks.map(t => ({ ...t, hours: t.on ? t.def : 0 })),
+    custom: false,
+  };
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e) { /* quota exceeded, ignore */ }
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   NAVIGATION + VALIDATION
+══════════════════════════════════════════════════════════════════ */
+function validateStep(n) {
+  if (n === 1) {
+    if (!state.sector) return "Sélectionnez un secteur.";
+    if (!state.totalEmployees || state.totalEmployees < 1) return "Indiquez le nombre de salariés.";
+  }
+  if (n === 2) {
+    const total = state.profiles.reduce((s,p) => s + (p.count||0), 0);
+    if (total < 1) return "Ajoutez au moins 1 personne sur un profil.";
+    if (!state.profiles.every(p => (p.rate||0) > 0 || p.count === 0)) return "Indiquez un coût horaire pour chaque profil utilisé.";
+  }
+  if (n === 3) {
+    const hasHours = state.profiles.some(p =>
+      p.count > 0 && p.tasks.some(t => t.on && t.hours > 0)
+    );
+    if (!hasHours) return "Activez au moins une tâche avec des heures.";
+  }
+  return null;
+}
+
+function goToStep(target) {
+  // validate current step before leaving
+  if (target > state.step) {
+    const err = validateStep(state.step);
+    if (err) {
+      const hint = document.getElementById('hint-' + state.step);
+      if (hint) { hint.textContent = err; setTimeout(() => hint.textContent = '', 3500); }
+      return;
+    }
+  }
+
+  if (target === 3) renderTasks();
+  if (target === 4) renderResults();
+
+  state.step = target;
+  saveState();
+
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.panel[data-panel="${target}"]`).classList.add('active');
+
+  document.querySelectorAll('.step-dot').forEach(d => {
+    const s = +d.dataset.step;
+    d.classList.toggle('active', s === target);
+    d.classList.toggle('done',   s < target);
+  });
+  document.querySelectorAll('.step-line').forEach((l,i) => l.classList.toggle('done', i+1 < target));
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetAll() {
+  if (!confirm("Réinitialiser le calculateur ? Vos données seront effacées.")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = defaultState();
+  document.getElementById('total-employees').value = state.totalEmployees;
+  document.getElementById('ca-input').value = state.ca;
+  document.querySelectorAll('.sector-opt').forEach(o =>
+    o.classList.toggle('selected', o.dataset.sector === state.sector));
+  renderProfiles();
+  goToStep(1);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STEP 1
+══════════════════════════════════════════════════════════════════ */
+document.getElementById('sector-grid').addEventListener('click', e => {
+  const opt = e.target.closest('.sector-opt');
+  if (!opt) return;
+  document.querySelectorAll('.sector-opt').forEach(o => o.classList.remove('selected'));
+  opt.classList.add('selected');
+  state.sector = opt.dataset.sector;
+  saveState();
+});
+
+function adjustEmployees(delta) {
+  const el = document.getElementById('total-employees');
+  const v = Math.max(1, Math.min(500, (+el.value||1) + delta));
+  el.value = v; state.totalEmployees = v; saveState();
+}
+document.getElementById('total-employees').addEventListener('input', e => {
+  state.totalEmployees = Math.max(1, +e.target.value||1); saveState();
+});
+document.getElementById('ca-input').addEventListener('input', e => {
+  state.ca = Math.max(0, +e.target.value||0); saveState();
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   STEP 2
+══════════════════════════════════════════════════════════════════ */
+function renderProfiles() {
+  document.getElementById('profiles-list').innerHTML = state.profiles.map(p => `
+    <div class="profile-card color-${p.color}" data-id="${p.id}">
+      <div class="profile-main">
+        <div class="profile-name">
+          ${p.custom
+            ? `<input type="text" value="${escapeHtml(p.name)}" onchange="updateProfile('${p.id}','name',this.value)">`
+            : escapeHtml(p.name)}
+        </div>
+        <div class="profile-desc">${escapeHtml(p.desc)}</div>
+      </div>
+      <div class="profile-field">
+        <label>Personnes</label>
+        <input class="mini-input" type="number" min="0" max="200" value="${p.count}"
+               oninput="updateProfile('${p.id}','count',+this.value||0)">
+      </div>
+      <div class="profile-field">
+        <label>€ / h chargé</label>
+        <input class="mini-input" type="number" min="15" max="200" value="${p.rate}"
+               oninput="updateProfile('${p.id}','rate',+this.value||0)">
+      </div>
+      <button class="remove-btn" title="Supprimer" onclick="removeProfile('${p.id}')">×</button>
+    </div>
+  `).join('');
+}
+
+function updateProfile(id, field, value) {
+  const p = state.profiles.find(x => x.id === id);
+  if (!p) return;
+  p[field] = value;
+  saveState();
+}
+function removeProfile(id) {
+  state.profiles = state.profiles.filter(p => p.id !== id);
+  renderProfiles(); saveState();
+}
+
+const CUSTOM_COLORS = ['blue','orange','purple','pink','teal'];
+function addCustomProfile() {
+  const colorIdx = state.profiles.length % CUSTOM_COLORS.length;
+  state.profiles.push({
+    id: 'custom-' + Math.random().toString(36).slice(2,7),
+    templateKey: null, name: "Nouveau profil", desc: "Profil personnalisé",
+    color: CUSTOM_COLORS[colorIdx], count: 1, rate: 35,
+    tasks: [
+      { key: 'c1', label: "Tâche répétitive 1", def: 2, hours: 2, on: true, auto: 0.70 },
+      { key: 'c2', label: "Tâche répétitive 2", def: 1, hours: 1, on: true, auto: 0.70 },
+    ],
+    custom: true,
+  });
+  renderProfiles(); saveState();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STEP 3
+══════════════════════════════════════════════════════════════════ */
+function renderTasks() {
+  document.getElementById('tasks-container').innerHTML = state.profiles.filter(p => p.count > 0).map(p => `
+    <div class="profile-block color-${p.color}">
+      <div class="profile-block-head">
+        <div class="profile-block-title">${escapeHtml(p.name)}</div>
+        <div class="profile-block-meta">${p.count} personne${p.count>1?'s':''} · ${p.rate}€/h chargé</div>
+      </div>
+      <div class="tasks-of-${p.id}">
+        ${p.tasks.map((t,i) => taskRowHtml(p.id, t, i)).join('')}
+      </div>
+      ${p.custom ? `<button class="add-task-btn" onclick="addCustomTask('${p.id}')">+ Ajouter une tâche</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function taskRowHtml(profileId, task, index) {
+  const autoPct = Math.round(task.auto * 100);
+  return `
+    <div class="task-row ${task.on ? '' : 'disabled'}" data-task-index="${index}">
+      <div class="task-info">
+        <div class="task-checkbox ${task.on ? 'checked' : ''}" onclick="toggleTask('${profileId}',${index})"></div>
+        <div class="task-name">${escapeHtml(task.label)}<span class="task-auto-tag">${autoPct}% auto</span></div>
+      </div>
+      <div class="task-slider-wrap">
+        <input type="range" class="task-slider" min="0" max="20" step="0.5"
+               value="${task.hours}" ${task.on ? '' : 'disabled'}
+               oninput="updateTask('${profileId}',${index},+this.value)">
+        <div class="task-value">${formatHours(task.hours)}<small>h/sem</small></div>
+      </div>
+    </div>
+  `;
+}
+
+function formatHours(h) { return h % 1 === 0 ? h : h.toFixed(1).replace('.',','); }
+
+function updateTask(profileId, index, value) {
+  const p = state.profiles.find(x => x.id === profileId);
+  if (!p) return;
+  p.tasks[index].hours = value;
+  const row = document.querySelector(`.tasks-of-${profileId} [data-task-index="${index}"] .task-value`);
+  if (row) row.innerHTML = `${formatHours(value)}<small>h/sem</small>`;
+  saveState();
+}
+
+function toggleTask(profileId, index) {
+  const p = state.profiles.find(x => x.id === profileId);
+  if (!p) return;
+  const t = p.tasks[index]; t.on = !t.on;
+  if (!t.on) { t.savedHours = t.hours; t.hours = 0; }
+  else       { t.hours = t.savedHours != null ? t.savedHours : t.def; }
+  renderTasks(); saveState();
+}
+
+function addCustomTask(profileId) {
+  const p = state.profiles.find(x => x.id === profileId);
+  if (!p) return;
+  p.tasks.push({ key: 'ct-'+Math.random().toString(36).slice(2,5), label: 'Nouvelle tâche', def: 1, hours: 1, on: true, auto: 0.70 });
+  renderTasks(); saveState();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STEP 4 — COMPUTE + ANIMATE
+══════════════════════════════════════════════════════════════════ */
+function computeResults() {
+  let totalHoursWeek = 0, totalCostYear = 0, totalSavings = 0, totalHoursSaved = 0;
+  const detail = [];
+
+  state.profiles.forEach(p => {
+    if (p.count === 0) return;
+    const section = { name: p.name, color: p.color, rows: [], subtotal: 0 };
+    p.tasks.forEach(t => {
+      if (!t.on || t.hours <= 0) return;
+      const hWeek = t.hours * p.count;
+      const hYear = hWeek * SEMAINES;
+      const cost  = hYear * p.rate;
+      const hSaved = hYear * t.auto;
+      const save   = cost * t.auto;
+      totalHoursWeek += hWeek;
+      totalCostYear  += cost;
+      totalSavings   += save;
+      totalHoursSaved += hSaved;
+      section.subtotal += cost;
+      section.rows.push({ label: t.label, hWeek, cost, auto: t.auto });
+    });
+    if (section.rows.length) detail.push(section);
+  });
+
+  const autoRateAvg = totalCostYear > 0 ? totalSavings / totalCostYear : 0;
+  const etpLiberes  = totalHoursSaved / 1607;
+  const etpTotal    = (totalHoursWeek * SEMAINES) / 1607;
+  const daysRecovered = Math.round(totalHoursSaved / 8);
+  const litigesCost = state.ca > 0 ? state.ca * 0.035 : 0;
+
+  return {
+    totalHoursWeek, totalCostYear,
+    savings: totalSavings, hoursSavedYear: totalHoursSaved,
+    etpLiberes, etpTotal, daysRecovered,
+    autoRateAvg, litigesCost, detail,
+  };
+}
+
+function animateNumber(el, target, duration, formatter) {
+  const start = parseFloat(el.dataset.current) || 0;
+  const t0 = performance.now();
+  el.dataset.current = target;
+  function step(now) {
+    const p = Math.min((now - t0) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const v = start + (target - start) * eased;
+    el.textContent = formatter(v);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function renderResults() {
+  const r = computeResults();
+  const sectorLabel = ({
+    transport: "transport routier", logistique: "logistique", messagerie: "messagerie",
+    affretement: "affrètement", froid: "transport frigorifique", autre: "services",
+  })[state.sector];
+
+  const concernes = state.profiles.reduce((s,p) => s + (p.count||0), 0);
+
+  document.getElementById('summary-hero').innerHTML = `
+    Votre entreprise dans le secteur <strong>${sectorLabel}</strong> avec
+    <strong>${concernes} salarié${concernes>1?'s':''}</strong> concerné${concernes>1?'s':''} perd environ
+    <span class="hl-orange">${Math.round(r.totalHoursWeek).toLocaleString('fr-FR')} heures par semaine</span>
+    sur des tâches répétitives automatisables.
+  `;
+
+  animateNumber(document.getElementById('r-cost'), r.totalCostYear, 900, formatEuros);
+  document.getElementById('r-cost-sub').innerHTML = `
+    perdus chaque année · soit <strong>${Math.round(r.totalHoursWeek)} h/semaine</strong>
+    · l'équivalent de <strong>${r.etpTotal.toFixed(1).replace('.',',')} salarié(s)</strong> à temps plein
+  `;
+
+  animateNumber(document.getElementById('r-gain'), r.savings, 900, formatEuros);
+  document.getElementById('r-gain-sub').innerHTML = `
+    économisés par an · <strong>${r.daysRecovered} jours</strong> récupérés
+  `;
+  document.getElementById('r-gain-foot').innerHTML = `
+    Base : <strong>${Math.round(r.autoRateAvg*100)} %</strong> d'automatisation moyenne pondérée par tâche
+    — le reste reste en supervision humaine.
+  `;
+
+  animateNumber(document.getElementById('m-etp'), r.etpLiberes, 700, v => v.toFixed(1).replace('.',','));
+  animateNumber(document.getElementById('m-days'), r.daysRecovered, 700, v => Math.round(v) + ' j');
+  if (r.litigesCost > 0) {
+    animateNumber(document.getElementById('m-errors'), r.litigesCost, 700, formatEuros);
+  } else {
+    document.getElementById('m-errors').textContent = '—';
+  }
+
+  document.getElementById('cta-stat').textContent =
+    `Votre potentiel : ${formatEuros(r.savings)}/an · ${r.daysRecovered} jours récupérés`;
+
+  document.getElementById('calendly-link').href = CALENDLY_URL;
+
+  renderDetail(r.detail);
+}
+
+function renderDetail(detail) {
+  document.getElementById('detail-table').innerHTML = `
+    <div class="detail-head">
+      <div>Tâche</div>
+      <div style="text-align:right">h/sem</div>
+      <div style="text-align:right">Auto.</div>
+      <div style="text-align:right">Coût / an</div>
+    </div>
+    ${detail.map(s => `
+      <div class="detail-section">${escapeHtml(s.name)} · ${formatEuros(s.subtotal)}/an</div>
+      ${s.rows.map(r => `
+        <div class="detail-row">
+          <div class="detail-row-task">${escapeHtml(r.label)}</div>
+          <div class="detail-row-h">${formatHours(r.hWeek)}</div>
+          <div class="detail-row-auto">${Math.round(r.auto*100)}%</div>
+          <div class="detail-row-cost">${formatEuros(r.cost)}</div>
+        </div>
+      `).join('')}
+    `).join('')}
+  `;
+}
+
+function toggleDetail() {
+  document.querySelector('.detail-toggle').classList.toggle('open');
+  document.getElementById('detail-table').classList.toggle('open');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LEAD MODAL
+══════════════════════════════════════════════════════════════════ */
+function openLeadModal() {
+  document.getElementById('lead-modal').classList.add('open');
+}
+function closeLeadModal() {
+  document.getElementById('lead-modal').classList.remove('open');
+}
+
+document.getElementById('lead-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target;
+  const err = document.getElementById('form-error');
+  err.textContent = '';
+
+  const data = {
+    firstname: f.firstname.value.trim(),
+    lastname:  f.lastname.value.trim(),
+    email:     f.email.value.trim(),
+    company:   f.company.value.trim(),
+    phone:     f.phone.value.trim(),
+  };
+
+  if (!data.firstname || !data.lastname || !data.email || !data.company) {
+    err.textContent = "Merci de remplir tous les champs obligatoires.";
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    err.textContent = "Email invalide.";
+    return;
+  }
+  if (!document.getElementById('consent').checked) {
+    err.textContent = "Veuillez accepter d'être recontacté.";
+    return;
+  }
+
+  state.leadCaptured = true;
+  state.lead = { ...data, submittedAt: new Date().toISOString() };
+  saveState();
+
+  // Hook webhook here (Make/n8n/Zapier) — exemple commenté :
+  // fetch('https://hook.eu1.make.com/XXX', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ lead: state.lead, results: computeResults(), state }) });
+
+  closeLeadModal();
+  goToStep(4);
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   UTILS + INIT
+══════════════════════════════════════════════════════════════════ */
+function formatEuros(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(2).replace('.',',') + ' M€';
+  return Math.round(n).toLocaleString('fr-FR') + ' €';
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+/* Restore UI from saved state */
+function restoreUI() {
+  document.getElementById('total-employees').value = state.totalEmployees;
+  document.getElementById('ca-input').value = state.ca;
+  document.querySelectorAll('.sector-opt').forEach(o =>
+    o.classList.toggle('selected', o.dataset.sector === state.sector));
+  renderProfiles();
+  if (state.step > 1) goToStep(state.step);
+}
+
+restoreUI();
+</script>
+</body>
+</html>
